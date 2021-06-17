@@ -1,0 +1,90 @@
+---
+title: "Quality Check Sequencing Reads"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Quality Check on Sequencing Reads
+```{r su, echo=FALSE}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("Rqc")
+```
+
+
+```{r library_import, echo = FALSE}
+#Read FASTQ files to rqc()
+library(Rqc)
+```
+Here we use a sample file "extdata/E-MTAB-1147" from the ShortRead package.
+```{r}
+folder <- system.file(package = "ShortRead", "extdata/E-MTAB-1147")
+```
+
+```{r genRep, echo=TRUE}
+qcRes <- rqc(path = folder, pattern = ".fastq.gz", openBrowser = TRUE)
+#openBrowser = TRUE will populate HTML report in Chrome Browser
+```
+
+## We can also view certain plots directly in R using the qcRes object created in previous step.
+Sequence Quality Per Base/Cycle
+We'll begin by displaying the calculations related to sequence quality per cycle.
+```{r seq_qual_per_base, echo=TRUE}
+rqcCycleQualityBoxCalc(qcRes)
+```
+Cycles will correspond to bases as a result of the fluorescent nT addition to complements in the template that are ID'd by the sequencer. Cycle number ~ read length
+The plot is visualized below:
+```{r pltCyc, echo=TRUE}
+rqcCycleQualityBoxPlot(qcRes)
+```
+Desirable median quality scores will be > 28.
+Scores below 20 and towards the end may need to be trimmed.
+
+## Sequence Content per base/cycle
+We will attempt to capture nT proportions for each position by plotting the per-base sequence content. 
+Random sequencing libraries will NOT have nT bias.
+Random sequencing will be evidenced by lines that are nearly parallel on the plot.
+
+```{r seq_content, echo=TRUE}
+rqcCycleBaseCallsCalc(qcRes)
+```
+The plot is below:
+```{r plotBC, echo=TRUE}
+rqcCycleBaseCallsLinePlot(qcRes)
+```
+*Note: bias in the beginning of the read is common with RNA-Seq due to random primers annealing to the start of reads during library prep. (This has zero effect on ability to measure gene expresion)
+*Note: Some libraries are inherently biased in their sequence composition.
+
+
+## Read Frequency Plot
+Examines the degree of duplication for every library read.
+
+```{r read_freq, echo = TRUE}
+rqcReadFrequencyCalc(qcRes)
+
+```
+The plot is below:
+```{r read_freq_plot, echo=TRUE}
+rqcReadFrequencyPlot(qcRes)
+```
+Non-unique reads ~ high level of PCR duplication which indicates enrichment bias. A possible cause is technical duplicates from PCR artifacts (PCR errors and PCR bias). PCR bias skews distribution of PCR products due to unequal amplification or cloning efficiency.
+*Note: RNA-seq data can have non-unique reads > 20% but shouldn't be removed because they may stem from genes expressed at high levels.
+*Note: CHIP-seq experiment duplicate reads more likely directly related to PCR bias.
+
+## Other Quality Metrics
+ Check for over-represented k-mers along the reads. Such instances may point to adapter contamination and should be trimmed.
+ 
+ 
+We can read the results to R for analysis/visualization.
+```{r rep, echo=TRUE}
+#view report
+#qc_report(qc.path = 'fastqc_results',
+          #result.file = 'reportFile', preview = TRUE)
+```
+

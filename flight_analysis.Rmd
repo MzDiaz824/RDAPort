@@ -1,0 +1,93 @@
+---
+title: "Flight Analysis"
+output: html_notebook
+---
+
+An examination of flight patterns from data included in the nycflights13 package. 
+
+```{r}
+install.packages('nycflights13')
+```
+
+```{r}
+library(nycflights13)
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+```
+
+Exploratory analysis of flights dataframe.
+
+```{r}
+str(flights)
+dim(flights)
+sum(is.na(flights))
+```
+
+We can see that their are 19 variables and 336,776 rows in the dataframe. Their are numerous entries, 46595, containing NA values which will be addressed throughout analysis. 
+
+```{r}
+meanDis <- mean(flights$distance, na.rm=TRUE)
+cat("The average distance travelled during all flights that supplied distance data is", meanDis)
+```
+
+We can filter flights similarly to the way would using SQL to comprise a list of flights operated by a particular carrier. Flights operated by Delta, American Airlines, and United Airlines.
+```{r}
+AUDFlights <- filter(flights, carrier == 'AA' | carrier == 'UA' | carrier == 'DL')
+```
+
+This can be accomplished with piping using the alternative line of code below.
+
+```{r}
+AUDFlightsTidy <- filter(flights, carrier %in% c('AA', 'UA', 'DL'))
+```
+
+Side by side comparison of the two datasets:
+
+```{r}
+head(AUDFlights)
+head(AUDFlightsTidy)
+tail(AUDFlights)
+tail(AUDFlightsTidy)
+AUDFlights[323,]
+AUDFlightsTidy[323,]
+```
+
+As you can see the first 10 rows and columns of each dataset are identical. Selecting a random row, 323, in the dataframe revealed identical data entries. 
+
+We can answer questions about the performance of each airline using the newly created dataset. 
+
+Q1. Which carrier had the longest departure delay on Christmas day?
+
+```{r}
+chrisDay <- filter(AUDFlights, month == 12 & day == 25)
+chrisDayT <- filter(AUDFlightsTidy, month == 12 & day == 25)
+CDDelay <- arrange(chrisDay, desc(dep_delay))
+CDDelay[1,10]
+```
+Delta had the longest departure delay on Christmas day! We can pull the actual value representing the length of the departure delay in the code below.
+```{r}
+CDDelay[1,6]
+```
+
+A client may be interested in how many flights were operated on Christmas day. We can simply count the total entries in the dataframe. 
+```{r}
+count(AUDFlights)
+```
+
+It may be important to investigate how often airlines are leaving late.
+
+```{r}
+deltaLate <- filter(AUDFlights, carrier == 'DL' & dep_delay > 0)
+count(deltaLate)
+aALate <- filter(AUDFlights, carrier == 'AA' & dep_delay > 0)
+uALate <- filter(AUDFlights, carrier == 'UA' & dep_delay >0)
+tabLate <- table(deltaLate)
+tabLate
+```
+
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+

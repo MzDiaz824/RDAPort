@@ -1,0 +1,49 @@
+---
+title: "Cluster Analysis of the Impact of Sepal Length and Width on Species"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+
+```{r}
+library(ggplot2)
+```
+
+```{r}
+str(iris)
+```
+
+Let's examine a plot of the iris dataset visualizing the use of sepal length and width as variables determining the particular species of a plant.
+```{r}
+irisPlot <- ggplot(iris, aes(Sepal.Length, Sepal.Width, color = Species)) + geom_point() + ggtitle("Sepal Length and Width As Determinants of Species")
+irisPlot
+```
+
+The plot indicates that no clear distinction can be made to differentiate between versicolor and virginica. Setosa seems to have little variance in classification.
+A k-means algorithm can be used to clean up the data and attempt to make species identification more consistent. We will choose 3 centroids to represent the species clusters each observation will be categorized as. 
+```{r}
+sepalKMeans <- kmeans(iris[, 1:2], 3, nstart = 25)
+```
+
+```{r}
+sepalTable <- table(iris$Species, sepalKMeans$cluster)
+sepalTable
+```
+The table above demonstrates the cluster analysis results. All setosa species were correctly clustered around centroid 3. The versicolor and virginica species had some incorrectly assigned data points. 
+
+```{r}
+sepalAcc <- ((38 + 35 + 50) / 150) * 100
+cat("The k-means algorithm is", sepalAcc, "percent accurate.")
+```
+
+```{r}
+sepalKMeans$AsAFactor <- as.factor(sepalKMeans$cluster)
+sepalKMPlot <- ggplot(iris, aes(Sepal.Length, Sepal.Width, color = factor(sepalKMeans$AsAFactor))) + geom_point() + ggtitle("Cluster Analysis of Iris Dataset Based on Sepal Length and Width")
+sepalKMPlot
+```
+
+The table used to determine the accuracy of the model grouped species by centroid. Centroid 1 represents the virginica species. Species 2 represents the versicolor species. Species 3 represents the setosa species. The plot above visualizes a significant improvement in species identification with distinct separation of the versicolor and virginica species identified as opposed to the initial clustering in which both species were confused as the other upon species identification. This is evidence that k-means clustering algorithms can improve the accuracy of identifying which observations belong to a particular dependent, factor variable.
+
+

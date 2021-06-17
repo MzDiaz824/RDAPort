@@ -1,0 +1,91 @@
+---
+title: "Filter and Trim Reads"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r quasR_install, echo=FALSE}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("QuasR")
+```
+
+## Filtering and Trimming Reads
+
+Reasons to remove reads:
+1. Reads with low quality scores probably won't align very well due to base call errors.
+2. Low quality reads align to wrong places in genome.
+Reasons to trim reads:
+1. Trim parts of reads for alignment to occur i.e. adapters on either side.
+2. Technical errors towards end of reads for alignment.
+
+## QuasR Package for Read Filtering and Trimming
+
+## We can match adapter sequences and remove them.
+
+```{r filepaths_def, echo=TRUE}
+library(QuasR)
+#obtain list of fastq file paths
+fastqFiles <- system.file(package = "ShortRead",
+                          "extdata/E-MTAB-1147",
+                          c("ERR127302_1_subset.fastq.gz",
+                            "ERR127302_2_subset.fastq.gz"))
+```
+```{r filenames, echo=TRUE}
+#define processed fastq file names
+outfiles <- paste(tempfile(pattern=c("processed_1_",
+                                      "processed_2_")), ".fastq", sep="")
+```
+
+```{r}
+#process fastq files
+#remove reads w/> 1 N, (nBases)
+#trim 3 bases from end of reads (truncatedEndBases)
+#Remove ACCCGGGA pattern occurring after start (Lpattern)
+#remove reads shorter than 40 bps (minLength)
+preprocessReads(fastqFiles, outfiles,
+                nBases = 1,
+                truncateEndBases = 3,
+                Lpattern = "ACCCGGGA",
+                minLength = 40)
+```
+
+## Remove Low-Complexity Reads
+
+Low complexity reads contain repetitive sequences.
+Below we will filter reads with every quality score < 20.
+```{r trim_low_qual, echo=TRUE}
+library(ShortRead)
+#obtain list of fastq file paths
+fastqFile <- system.file(package = "ShortRead",
+                         "extdata/E-MTAB-1147",
+                         "ERR127302_1_subset.fastq.gz")
+#read fastq file
+fq <- readFastq(fastqFile)
+
+#get quality score per base as  a matrix
+qPerBase <- as(quality(fq), "matrix")
+
+#get number of bases per read w/quality score below 20
+qcount = rowSums( qPerBase <= 20)
+
+#Number of reads w/Phred score >=20
+fq[qcount == 0]
+```
+
+## Write out filtered fastq file
+
+```{r write_filter_fq, echo=TRUE}
+writeFastq(fq[qcount == 0],
+           paste(fastqFile, "Qfiltered", sep="_"), mode='a')
+```
+
+
+

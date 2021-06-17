@@ -1,0 +1,73 @@
+---
+title: "K-Means Clusters Within Iris Dataset"
+output:
+  html_document:
+    df_print: paged
+---
+
+The following code will demonstrate K-means clustering using the Iris dataset in R. 
+
+```{r}
+library(datasets)
+library(dplyr)
+library(ggplot2)
+```
+
+Let's examine the properties of the dataset. 
+```{r}
+str(iris)
+```
+We can see that there are 5 variables with the Species variable serving as a 3 level factor variable.
+
+Let's examine creating clusters using petal length and width to determine the species of an iris flower. 
+We'll begin by creating a plot of the dataset to visualize where the observations fall in regards to speciation.
+```{r}
+plot1 <- ggplot(iris, aes(Petal.Length, Petal.Width, color = Species)) + geom_point() + ggtitle("Iris Species Identification Based on Petal Length and Width")
+plot1
+```
+
+Examining the scatter plot, we can conclude that setosa species are classified correctly without any errors. The versicolor and virginica species, however, appear to have incorrect classifications as evidenced by the lack of clear separation of the groups.
+
+Below is a scatter plot demonstrating the overlap in the versicolor and virginica groups. 
+```{r}
+plot1 + stat_ellipse()
+```
+
+Implementation of K-Means clustering algorithms will attempt to determine the best possible outcome after running the algorithm a specified number of times. Considering the small size of the dataset we will run K-Means 25 times to determine the optimal clustering analysis results. Ordinarily, one could use the default of 1 for the K-Means n variable however, the default is best applied to much larger datasets. Be sure to only include the columns/variables of interest in your implementation.
+
+```{r}
+irisClustered <- kmeans(iris[ , 3:4], 3, nstart = 25)
+```
+
+The cluster analysis is now ready to be investigated.
+Creating a table with the clustering results of each species confirms the incorrect classifications. 
+```{r}
+clusterClassifications <- table(irisClustered$cluster, iris$Species)
+clusterClassifications
+```
+
+Clustering results confirm that the setosa species is still correctly grouped 100% of the time. There were 2 incorrect classifications of the versicolor species and 4 incorrect classifications of the virginica species. There were 2 versicolor species placed in to the 2nd cluster and 4 virginica species placed in to cluster 1. Basically, 2 versicolor species were incorrectly identified as virginica and 4 virginica species were incorrectly identifed as versicolor species. 
+
+We can determine the accuracy of the K-Means clustering by calculating the number of correctly identified species and dividing that number by the total species that were clustered.
+
+```{r}
+tP <- 50 + 48 + 46
+total <- 150
+modelAccuracy <- (tP / total) *100
+cat("The model is", modelAccuracy, "percent accurate, which is very high!")
+```
+
+The clustering can be visualized via a scatter plot in the same way that the original dataset had been visualized. 
+
+```{r}
+irisClustered$clusterAsFactors <- as.factor(irisClustered$cluster)
+clusterPlot <- ggplot(iris, aes(Petal.Length, Petal.Width, color = irisClustered$cluster)) + geom_point() + ggtitle("K-Means Clustering of Iris Dataset")
+clusterPlot
+```
+
+
+```{r}
+
+```
+
+
