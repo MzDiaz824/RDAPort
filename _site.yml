@@ -1,0 +1,12 @@
+name: "samples"
+output_dir: "docs"
+navbar:
+  title: "Work Samples"
+  left:
+  - text: "Home"
+   href: index.html
+  - text: "Data Exploration, Cleaning and Analysis"
+   href: multiomics.html
+output:
+  html_document:
+ theme: cosmo
